@@ -1,17 +1,15 @@
-
-
 module.exports = {
-    getAllUsers(db) {
+    getAllOrders(db) {
         const sql = "select * from user";
         const params = [];
-        return new Promise((resolve, reject) => {
-            db.all(sql, params, (err, rows) => {
-                if (err) reject(err);
-                resolve(rows);
-            })
-        });
+        return db.all(sql, params);
     },
-    getUserById(db, userId) {
+    getOrderById(db, userId) {
+        const sql = "select * from user where id = $1"
+        let params = [userId]
+        return db.get(sql, params);
+    },
+    createNewOrder(db, userId) {
         const sql = "select * from user where id = $1"
         let params = [userId]
         return new Promise((resolve, reject) => {
@@ -21,7 +19,17 @@ module.exports = {
             })
         });
     },
-    setNewUser(db, userId) {
+    deleteOrderById(db, userId) {
+        const sql = "select * from user where id = $1"
+        let params = [userId]
+        return new Promise((resolve, reject) => {
+            db.get(sql, params, (err, rows) => {
+                if (err) reject(err);
+                resolve(rows);
+            })
+        });
+    },
+    changeOrderStatus(db, userId) {
         const sql = "select * from user where id = $1"
         let params = [userId]
         return new Promise((resolve, reject) => {

@@ -3,30 +3,31 @@ var md5 = require('md5')
 
 const DBSOURCE = "db.sqlite"
 
-let db = new sqlite3.Database(DBSOURCE, (err) => {
+let db = new sqlite3.Database(DBSOURCE, async(err) => {
     if (err) {
         // Cannot open database
         console.error(err.message)
         throw err
     } else {
         console.log('Connected to the SQLite database.')
-        db.run(`CREATE TABLE users (
+        await db.run(`CREATE TABLE users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            username text,
+            username text UNIQUE,
             password text,
             CONSTRAINT username_unique UNIQUE (username)
             )`,
             (err) => {
                 if (err) {
-                    // Table already created
+                    console.log('We already have table "users". Skipping...');
                 } else {
                     // Table just created, creating some rows
-                    var insert = 'INSERT INTO users (username, password) VALUES (?,?)';
-                    db.run(insert, ["admin", md5("pass123")]);
+                    var insert = 'INSERT INTO users (username, password) VALUES (?,?)'
+                    db.run(insert, ["admin", md5("pass123")])
+                    db.run(insert, ["user", md5("pass123")])
                    
                 }
             });
-        db.run(`CREATE TABLE products (
+        await db.run(`CREATE TABLE products (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name text,
             category text,
@@ -35,7 +36,7 @@ let db = new sqlite3.Database(DBSOURCE, (err) => {
             )`,
             (err) => {
                 if (err) {
-                    // Table already created
+                    console.log('We already have table "products". Skipping...');
                 } else {
                     // Table just created, creating some rows
                     var insert = 'INSERT INTO products (name, category,price) VALUES (?,?,?)';
@@ -43,15 +44,15 @@ let db = new sqlite3.Database(DBSOURCE, (err) => {
                     db.run(insert, ["Milk", 'Diary', '2.5']);
                 }
             });
-        db.run(`CREATE TABLE orders (
+        await db.run(`CREATE TABLE orders (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             date text,
             products text,
-            status text,
+            status text
             )`,
             (err) => {
                 if (err) {
-                    // Table already created
+                    console.log('We already have table "orders". Skipping...');
                 } else {
                     // Table just created, creating some rows
                     var insert = 'INSERT INTO orders (date, products,status) VALUES (?,?,?)';
@@ -59,8 +60,9 @@ let db = new sqlite3.Database(DBSOURCE, (err) => {
                     db.run(insert, ["2018-05-30", '[1]','Pending']);
                 }
             });    
-
+       
     }
+    
 
 });
 
