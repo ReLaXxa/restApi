@@ -2,27 +2,24 @@ const routes = require('express').Router();
 const authModel = require('../models/auth');
 const jwt = require('jsonwebtoken');
 
-module.exports = (db,config) => {
+module.exports = (db, config) => {
     routes.post("/login", async (req, res, next) => {
-        if(Object.keys(req.body).length == 0) return res.status(401).send('You need to provide username and password');
+        if (Object.keys(req.body).length == 0) return res.status(401).send('You need to provide username and password');
         const { username, password } = req.body;
         if (username == '' || password == '') return res.status(401).send('Both username and password needs to be values');
         try {
-            let request=await authModel.doLogin(db, username, password).then((item) => {})
-            let token = jwt.sign({ username: username },
-                config.secret,
-                {
-                    expiresIn: '24h' // expires in 24 hours
-                }
-            );
-            // return the JWT token for the future API calls
-        
+            let request = await authModel.doLogin(db, username, password).then((item) => { })
+
             return res.json({
                 success: true,
                 message: 'Authentication successful!',
-                token: token
+                jwt: jwt.sign({
+                    username: username,
+                    country_code: 'IT'
+                }, config.secret, { expiresIn: 60 * 60 }
+                )
             });
-           
+
         } catch (error) {
             console.log(error)
             res.status(401).send(error)
