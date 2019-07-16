@@ -8,17 +8,18 @@ module.exports = (db, config) => {
         const { username, password } = req.body;
         if (username == '' || password == '') return res.status(401).send('Both username and password needs to be values');
         try {
-            let request = await authModel.doLogin(db, username, password).then((item) => { })
-
-            return res.json({
-                success: true,
-                message: 'Authentication successful!',
-                jwt: jwt.sign({
-                    username: username,
-                    country_code: 'IT'
-                }, config.secret, { expiresIn: 60 * 60 }
-                )
-            });
+            let request = await authModel.doLogin(db, username, password).then((item) => {
+                if (item === undefined) return res.status(401).send({msg:'Wrong username or password'});
+                return res.json({
+                    success: true,
+                    message: 'Authentication successful!',
+                    jwt: jwt.sign({
+                        username: username,
+                        country_code: 'IT'
+                    }, config.secret, { expiresIn: 60 * 10 }
+                    )
+                });
+             })
 
         } catch (error) {
             console.log(error)
