@@ -13,7 +13,7 @@ module.exports = (checkToken, db) => {
 
                     let filtered = JSON.parse(body).rates.filter((desired_country) => desired_country.country_code === req.decoded.country_code.toUpperCase());
                     if (filtered.length === 0) {
-                        return res.status(400).json({ error: 'cannot get vat info for country code ' + req.body.country_code });
+                        return res.status(404).json({ error: 'Cannot get vat info for country code ' + req.body.country_code });
                     }
                     let periods = filtered[0].periods;
                     let date = new Date();
@@ -26,7 +26,7 @@ module.exports = (checkToken, db) => {
                             break;
                         }
                     }
-                    if (usage_period === undefined) return res.status(400).json({ error: 'cannot get effective vat record for country code ' + req.body.country_code });
+                    if (usage_period === undefined) return res.status(404).json({ error: 'Cannot get effective vat record for country code ' + req.body.country_code });
                 }
                 await productsModel.getAllProducts(db).then((items) => {
                     if (usage_period == undefined) return res.status(200).send({ msg: 'No VAT for annonymous users. Loging to recieve VAT prices', items })
@@ -56,7 +56,7 @@ module.exports = (checkToken, db) => {
         try {
             await productsModel.createNewProduct(db, product).then((items) => {
                 console.log(items);
-                res.status(200).send({ msg: 'Item is saved' })
+                res.status(201).send({ msg: 'Item is saved' })
             });
         } catch (error) {
             console.log(error)
@@ -72,34 +72,36 @@ module.exports = (checkToken, db) => {
             res.status(400).send(error)
         }
     });
-    routes.put("/", checkToken, async (req, res, next) => {
-        if (!req.body.id) return res.status(400).send({ msg: 'Form error.', reason: 'You need to point an ID' });
+    routes.put("/:id*?", checkToken, async (req, res, next) => {
+        // if (!req.body.id) return res.status(400).send({ msg: 'Form error.', reason: 'You need to point an ID' });
         if (!req.body.name) return res.status(400).send({ msg: 'Form error.', reason: 'You need to provide a name' });
         if (!req.body.category) return res.status(400).send({ msg: 'Form error.', reason: 'You need to provide a category' });
         if (!req.body.price) return res.status(400).send({ msg: 'Form error.', reason: 'You need to provide a price' });
         const product = {
-            id: req.body.id,
+            id: req.params.id||0,
             name: req.body.name,
             category: req.body.category,
             price: req.body.price
         };
-
         try {
             await productsModel.getProductById(db, product.id).then(async(items) => {
+        
                 if (items === undefined) {
                     await productsModel.createNewProduct(db, product).then((items) => 
-                        res.status(200).send({ msg: 'Item is created' })
+                        res.status(201).send({ msg: 'Item is created' })
                     );
                 } else {
                     await productsModel.editProductById(db, product).then((items) =>
-                        res.status(200).send({ msg: 'Item is updated' })
+                        res.status(201).send({ msg: 'Item is updated' })
                     )
                 }
             });
 
         } catch (error) {
             console.log(error)
-            res.status(400).send(error)
+            let msg=error.errno==19? 'Name should be unique':'Something went wrong. Try again';
+            let code = error.errno == 19 ? 400:500;
+            res.status(code).send({msg})
         }
     });
     routes.delete("/:id", checkToken, async (req, res, next) => {
@@ -107,7 +109,7 @@ module.exports = (checkToken, db) => {
         const productId = req.params.id;
         try {
             await productsModel.deleteProductById(db, productId).then((items) =>
-                res.status(200).send({ msg: `Id with id:${productId} has been deleted ` })
+                res.status(204).send({ msg: `Id with id:${productId} has been deleted ` })
             )
         } catch (error) {
             console.log(error)

@@ -11,6 +11,6 @@
 
 ## Notes
 
->Inside you can find a Postman export of the REST API tests, which you can inport into your env
+>Inside you can find a Postman export of the REST API tests, which you can import into your env
 
 > The Postman export uses Collection v2.1.0

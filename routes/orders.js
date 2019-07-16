@@ -27,17 +27,17 @@ module.exports = (checkToken, db) => {
             status: req.body.status
         };
         try {
-            await ordersModel.createNewOrder(db, order).then((items) => res.status(200).send({ msg: 'Order is made' }));
+            await ordersModel.createNewOrder(db, order).then((items) => res.status(201).send({ msg: 'Order is made' }));
         } catch (error) {
             console.log(error)
             res.status(400).send(error)
         }
     });
-    routes.patch("/", checkToken, async (req, res, next) => {
-        if (!req.body.id) return res.status(400).send({ msg: 'Form error.', reason: 'You need to provide a id' });
+    routes.patch("/:id", checkToken, async (req, res, next) => {
+        if (!req.params.id) return res.status(400).send({ msg: 'Form error.', reason: 'You need to provide a id' });
         if (!req.body.status) return res.status(400).send({ msg: 'Form error.', reason: 'You need to provide a status' });
         const order = {
-            id: req.body.id,
+            id: req.params.id,
             status: req.body.status
         };
         try {
@@ -47,18 +47,18 @@ module.exports = (checkToken, db) => {
             res.status(400).send(error)
         }
     });
-    routes.put("/", checkToken, async (req, res, next) => {
-        if (!req.body.id) return res.status(400).send({ msg: 'Form error.', reason: 'You need to provide a id' });
+    routes.put("/:id*?", checkToken, async (req, res, next) => {
+        // if (!req.body.id) return res.status(400).send({ msg: 'Form error.', reason: 'You need to provide a id' });
         if (!req.body.status) return res.status(400).send({ msg: 'Form error.', reason: 'You need to provide a status' });
         const order = {
-            id: req.body.id,
+            id: req.params.id||0,
             status: req.body.status,
             products: req.body.products
         };
         try {
             await ordersModel.getOrderById(db, order.id).then(async(item) => {
                if(item===undefined){
-                   await ordersModel.createNewOrder(db, order).then((items) => res.status(200).send({ msg: 'Order is made' }));
+                   await ordersModel.createNewOrder(db, order).then((items) => res.status(201).send({ msg: 'Order is made' }));
                }else{
                    await ordersModel.changeOrderStatus(db, order).then((items) => res.status(200).send({ msg: "Order has been updated" }));
                }
@@ -68,7 +68,6 @@ module.exports = (checkToken, db) => {
             res.status(400).send(error)
         }
     });
-
 
     return routes;
 }

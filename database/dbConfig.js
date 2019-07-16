@@ -31,8 +31,7 @@ let db = new sqlite3.Database(DBSOURCE, async(err) => {
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name text,
             category text,
-            price text,
-            CONSTRAINT name_unique UNIQUE (name)
+            price text
             )`,
             (err) => {
                 if (err) {

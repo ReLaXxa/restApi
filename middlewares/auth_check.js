@@ -25,7 +25,7 @@ let checkToken = (req, res, next) => {
     else if (req.method == 'GET' && req.baseUrl.includes('/products')) {
         next();
     } else {
-        return res.json({
+        return res.status(400).send({
             success: false,
             message: 'Auth token is not supplied'
         });
