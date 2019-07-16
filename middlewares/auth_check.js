@@ -13,10 +13,8 @@ let checkToken = (req, res, next) => {
         }
         jwt.verify(token, config.secret, (err, decoded) => {
             if (err) {
-                console.log(err)
-                return res.json({
-                    success: false,
-                    message: 'Token is not valid'
+                return res.status(401).send({
+                    message:'Your access token has expired or is invalid'
                 });
             } else {
                 req.decoded = decoded;

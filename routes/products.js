@@ -3,12 +3,12 @@ const request = require('request');
 const productsModel = require('../models/products');
 
 module.exports = (checkToken, db) => {
-    routes.get("/", checkToken,async (req, res, next) => {
+    routes.get("/", checkToken, async (req, res, next) => {
         try {
             await request('http://jsonvat.com', async (error, response, body) => {
-                let usage_period;  
-                console.log('usage_period is ',usage_period)  
-                if(req.decoded){
+                let usage_period;
+            
+                if (req.decoded) {
                     if (error) return res.status(500).send({ mgs: 'We have some issues retrieving the vats' });
 
                     let filtered = JSON.parse(body).rates.filter((desired_country) => desired_country.country_code === req.decoded.country_code.toUpperCase());
@@ -32,11 +32,11 @@ module.exports = (checkToken, db) => {
                     if (usage_period == undefined) return res.status(200).send({ msg: 'No VAT for annonymous users. Loging to recieve VAT prices', items })
                     let evaluatedItems;
                     let productPrice = (Number(req.body.price) + (Number(req.body.price) * Number(usage_period.rates.standard) / 100)).toFixed(2);
-                    evaluatedItems=items.forEach((el)=>{
-                      el.price = (Number(el.price) + (Number(el.price) * Number(usage_period.rates.standard) / 100)).toFixed(2);
+                    evaluatedItems = items.forEach((el) => {
+                        el.price = (Number(el.price) + (Number(el.price) * Number(usage_period.rates.standard) / 100)).toFixed(2);
                     })
-                    console.log(evaluatedItems)
-                    return res.status(200).send({items})
+                 
+                    return res.status(200).send({ items })
                 })
             });
         } catch (error) {
@@ -48,21 +48,21 @@ module.exports = (checkToken, db) => {
         if (!req.body.name) return res.status(400).send({ msg: 'Form error.', reason: 'You need to provide a name' });
         if (!req.body.category) return res.status(400).send({ msg: 'Form error.', reason: 'You need to provide a category' });
         if (!req.body.price) return res.status(400).send({ msg: 'Form error.', reason: 'You need to provide a price' });
-            const product = {
-                name: req.body.name,
-                category: req.body.category,
-                price: req.body.price
-            };
-            try {
-                await productsModel.createNewProduct(db, product).then((items) => {
-                    console.log(items);
-                    res.status(200).send({ msg: 'Item is saved' })
-                });
-            } catch (error) {
-                console.log(error)
-                res.status(400).send(error)
-            }
-        });
+        const product = {
+            name: req.body.name,
+            category: req.body.category,
+            price: req.body.price
+        };
+        try {
+            await productsModel.createNewProduct(db, product).then((items) => {
+                console.log(items);
+                res.status(200).send({ msg: 'Item is saved' })
+            });
+        } catch (error) {
+            console.log(error)
+            res.status(400).send(error)
+        }
+    });
     routes.get("/:id", checkToken, async (req, res, next) => {
         const productId = Number(req.params.id);
         try {
@@ -72,22 +72,31 @@ module.exports = (checkToken, db) => {
             res.status(400).send(error)
         }
     });
-    routes.patch("/:id", checkToken, async (req, res, next) => {
-        if (!req.params.id) return res.status(400).send({ msg: 'Form error.', reason: 'You need to point an ID' });
+    routes.put("/", checkToken, async (req, res, next) => {
+        if (!req.body.id) return res.status(400).send({ msg: 'Form error.', reason: 'You need to point an ID' });
         if (!req.body.name) return res.status(400).send({ msg: 'Form error.', reason: 'You need to provide a name' });
         if (!req.body.category) return res.status(400).send({ msg: 'Form error.', reason: 'You need to provide a category' });
         if (!req.body.price) return res.status(400).send({ msg: 'Form error.', reason: 'You need to provide a price' });
-
         const product = {
-            id: req.params.id,
+            id: req.body.id,
             name: req.body.name,
             category: req.body.category,
             price: req.body.price
         };
+
         try {
-            await productsModel.editProductById(db, product).then((items) =>
-                res.json({ items })
-            )
+            await productsModel.getProductById(db, product.id).then(async(items) => {
+                if (items === undefined) {
+                    await productsModel.createNewProduct(db, product).then((items) => 
+                        res.status(200).send({ msg: 'Item is created' })
+                    );
+                } else {
+                    await productsModel.editProductById(db, product).then((items) =>
+                        res.status(200).send({ msg: 'Item is updated' })
+                    )
+                }
+            });
+
         } catch (error) {
             console.log(error)
             res.status(400).send(error)

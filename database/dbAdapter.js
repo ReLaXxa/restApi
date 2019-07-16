@@ -20,7 +20,6 @@ module.exports={
     run: function (sql, params) {
         return new Promise((resolve, reject) => {
             dbConfig.run(sql, params, (err, rows) => {
-                console.log(this.lastID)
                 if (err) reject(err);
                 resolve(rows);
             })

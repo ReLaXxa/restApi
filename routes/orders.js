@@ -10,9 +10,9 @@ module.exports = (checkToken, db) => {
         }
     });
     routes.get("/:id", checkToken, async (req, res, next) => {
-        const userId = Number(req.params.id)
+        const orderId = Number(req.params.id)
         try {
-            let items = await ordersModel.getOrderById(db, userId).then((item) => {
+            let items = await ordersModel.getOrderById(db, orderId).then((item) => {
                 return res.json({ item });
             })
         } catch (error) {
@@ -42,6 +42,27 @@ module.exports = (checkToken, db) => {
         };
         try {
             await ordersModel.changeOrderStatus(db, order).then((items) => res.status(200).send({ msg: "Order's staus has been changed" }));
+        } catch (error) {
+            console.log(error)
+            res.status(400).send(error)
+        }
+    });
+    routes.put("/", checkToken, async (req, res, next) => {
+        if (!req.body.id) return res.status(400).send({ msg: 'Form error.', reason: 'You need to provide a id' });
+        if (!req.body.status) return res.status(400).send({ msg: 'Form error.', reason: 'You need to provide a status' });
+        const order = {
+            id: req.body.id,
+            status: req.body.status,
+            products: req.body.products
+        };
+        try {
+            await ordersModel.getOrderById(db, order.id).then(async(item) => {
+               if(item===undefined){
+                   await ordersModel.createNewOrder(db, order).then((items) => res.status(200).send({ msg: 'Order is made' }));
+               }else{
+                   await ordersModel.changeOrderStatus(db, order).then((items) => res.status(200).send({ msg: "Order has been updated" }));
+               }
+            })
         } catch (error) {
             console.log(error)
             res.status(400).send(error)
